@@ -1,0 +1,41 @@
+#! python3
+from typing import NoReturn
+import urllib.parse
+from argparse import ArgumentParser
+from subprocess import check_output
+from subprocess import run
+
+
+class WeatherChecker:
+    def __init__(self, location: str = "", **kwargs):
+        self.location = location
+        self.unused_args = kwargs
+
+    def __call__(self):
+        run(["curl", f"wttr.in/{self._args}"])
+        if self.unused_args:
+            print(f"We didn't use the following arguments: {self.unused_args}")
+
+    @property
+    def _args(self):
+        """
+        URL-encoded arguments from Python arguments passed to us in
+        __init__
+        """
+        args = [self.location]
+        return urllib.parse.quote_plus("?" + "".join(args))
+
+
+if __name__ == "__main__":
+    arg_parser = ArgumentParser(description="A CLI wrapper around wttr.in")
+    arg_parser.add_argument("--in", "-i", dest="location", nargs="?")
+    arg_parser.add_argument(
+        "--text", "-T", dest="output_plain_text", action="store_true"
+    )
+    arg_parser.add_argument(
+        "--uscs",
+        dest="force_uscs",
+        help="Force the use of United States Customary System (i.e. Farenheit etc) everywhere in the world.",
+    )
+    args = arg_parser.parse_args()
+    WeatherChecker(**vars(args))()
